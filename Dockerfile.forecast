@@ -11,10 +11,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY forecast.py .
 
+# รับ credentials จาก build-time variable แล้วเขียนเป็นไฟล์
+ARG GOOGLE_CREDENTIALS_JSON_B64
+RUN echo "$GOOGLE_CREDENTIALS_JSON_B64" | base64 -d > /app/credentials.json
+
 # รัน forecast ทุก 6 ชั่วโมง
 RUN echo "0 */6 * * * cd /app && python forecast.py >> /var/log/forecast.log 2>&1" > /etc/cron.d/forecast && \
     chmod 0644 /etc/cron.d/forecast && \
     crontab /etc/cron.d/forecast
 
-# รันครั้งแรกทันที แล้วค้าง cron ไว้
 CMD python forecast.py && cron -f
