@@ -161,6 +161,39 @@
     .project-card h2   { font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; }
     .project-card p    { font-size: .85rem; color: var(--dim); line-height: 1.6; }
 
+    /* ── PM2.5 GREEN THEME ── */
+    #page-pm25 .card {
+      background: linear-gradient(135deg, #0d2818 0%, #0f3320 100%);
+      border-color: #1e5c34;
+      box-shadow: 0 4px 20px rgba(0,0,0,.45), 0 0 0 0 rgba(74,222,128,0);
+      transition: box-shadow .3s, border-color .3s;
+    }
+    #page-pm25 .card:hover {
+      border-color: #4ade80;
+      box-shadow: 0 4px 24px rgba(0,0,0,.5), 0 0 14px rgba(74,222,128,.18);
+    }
+    #page-pm25 .card-value { color: #4ade80; }
+    #page-pm25 .card-label { color: #86efac; }
+    #page-pm25 .card-unit  { color: #86efac; }
+
+    #page-pm25 header h1 span { color: #4ade80; }
+    #page-pm25 .btn { border-color: #1e5c34; }
+    #page-pm25 .btn:hover { background: #1a5c30; border-color: #4ade80; }
+    #page-pm25 .btn-back:hover { color: var(--text); border-color: #4ade80; }
+
+    #page-pm25 .chart-box  { border-color: #1e5c34; }
+    #page-pm25 .chart-box h2 { color: #4ade80; }
+    #page-pm25 .table-box  { border-color: #1e5c34; }
+    #page-pm25 .table-box h2 { color: #4ade80; }
+    #page-pm25 th { background: #0d2818; }
+    #page-pm25 td { border-bottom-color: #1a3a22; }
+
+    /* home card hover สีเขียวสำหรับ PM */
+    .project-card.pm-card:hover {
+      border-color: #4ade80;
+      box-shadow: 0 8px 30px rgba(74,222,128,.2);
+    }
+
     @media (max-width: 480px) {
       .card-value { font-size: 1.6rem; }
       header h1   { font-size: 1.1rem; }
@@ -178,14 +211,14 @@
     <p>เลือกโปรเจคที่ต้องการดูข้อมูล</p>
   </div>
   <div class="home-grid">
-    <div class="project-card" onclick="showPage('page-pm25')">
+    <div class="project-card pm-card" onclick="showPage('page-pm25')">
       <div class="icon">🌫️</div>
-      <h2>โปรเจค PM2.5</h2>
-      <p>ตรวจวัดคุณภาพอากาศ<br>PM1.0 · PM2.5 · PM10<br>อุณหภูมิ · ความชื้น</p>
+      <h2>โครงงานตรวจวัดคุณภาพอากาศ</h2>
+      <p><br>PM1.0 · PM2.5 · PM10<br>อุณหภูมิ · ความชื้น</p>
     </div>
     <div class="project-card" onclick="showPage('page-water')">
       <div class="icon">💧</div>
-      <h2>โปรเจคน้ำกก</h2>
+      <h2>โครงงานตรวจวัดคุณภาพน้ำ</h2>
       <p>ตรวจวัดคุณภาพน้ำ แม่น้ำกก<br>อุณหภูมิ · pH · TDS<br>ความขุ่น (Turbidity)</p>
     </div>
   </div>
