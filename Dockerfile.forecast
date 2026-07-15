@@ -1,0 +1,20 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc g++ cron && \
+    rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY forecast.py .
+
+# รัน forecast ทุก 6 ชั่วโมง
+RUN echo "0 */6 * * * cd /app && python forecast.py >> /var/log/forecast.log 2>&1" > /etc/cron.d/forecast && \
+    chmod 0644 /etc/cron.d/forecast && \
+    crontab /etc/cron.d/forecast
+
+# รันครั้งแรกทันที แล้วค้าง cron ไว้
+CMD python forecast.py && cron -f

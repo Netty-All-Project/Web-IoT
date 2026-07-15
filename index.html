@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IoT Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #1a1a2e;
+      --surface: #16213e;
+      --card:    #0f3460;
+      --border:  #1a4a8a;
+      --text:    #e0e0e0;
+      --dim:     #8899aa;
+      --radius:  12px;
+      --shadow:  0 4px 20px rgba(0,0,0,.45);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Sarabun', sans-serif;
+      font-size: 15px;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    header h1 { font-size: 1.4rem; font-weight: 700; }
+    header h1 span { color: #4fc3f7; }
+    .last-update { font-size: .8rem; color: var(--dim); }
+
+    /* ── BUTTONS ── */
+    .btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: .85rem;
+      transition: background .2s, border-color .2s;
+    }
+    .btn:hover { background: #1a4a8a; }
+    .btn-back { background: none; color: var(--dim); }
+    .btn-back:hover { color: var(--text); border-color: #4fc3f7; background: none; }
+
+    /* ── CARDS ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px 14px;
+      text-align: center;
+    }
+    .card-label { font-size: .75rem; color: var(--dim); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+    .card-value { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .card-unit  { font-size: .7rem; color: var(--dim); margin-top: 4px; }
+
+    /* ── CHARTS ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .chart-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .chart-box h2 { font-size: .9rem; font-weight: 600; margin-bottom: 12px; color: #90caf9; }
+    .chart-box canvas { max-height: 240px; }
+
+    /* ── TABLE ── */
+    .table-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      overflow-x: auto;
+    }
+    .table-box h2 { font-size: .9rem; font-weight: 600; margin-bottom: 12px; color: #90caf9; }
+    table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    th { background: var(--card); color: var(--dim); font-weight: 600; padding: 9px 10px; text-align: left; position: sticky; top: 0; }
+    td { padding: 8px 10px; border-bottom: 1px solid #1a2a4a; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,.04); }
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: .75rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* ── STATUS BAR ── */
+    .status-bar {
+      text-align: center;
+      font-size: .8rem;
+      color: var(--dim);
+      margin-bottom: 14px;
+      min-height: 18px;
+    }
+
+    /* ── HOME PAGE ── */
+    #page-home { max-width: 700px; margin: 0 auto; }
+    .home-hero {
+      text-align: center;
+      padding: 60px 0 40px;
+    }
+    .home-hero h1 { font-size: 2rem; font-weight: 700; margin-bottom: 8px; }
+    .home-hero p  { color: var(--dim); font-size: 1rem; }
+
+    .home-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .project-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 40px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .project-card:hover {
+      transform: translateY(-5px);
+      border-color: #4fc3f7;
+      box-shadow: 0 8px 30px rgba(79,195,247,.2);
+    }
+    .project-card .icon { font-size: 3.5rem; margin-bottom: 16px; }
+    .project-card h2   { font-size: 1.25rem; font-weight: 700; margin-bottom: 10px; }
+    .project-card p    { font-size: .85rem; color: var(--dim); line-height: 1.6; }
+
+    @media (max-width: 480px) {
+      .card-value { font-size: 1.6rem; }
+      header h1   { font-size: 1.1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════
+     HOME PAGE
+════════════════════════════════════════════ -->
+<div id="page-home">
+  <div class="home-hero">
+    <h1>🌐 IoT Dashboard</h1>
+    <p>เลือกโปรเจคที่ต้องการดูข้อมูล</p>
+  </div>
+  <div class="home-grid">
+    <div class="project-card" onclick="showPage('page-pm25')">
+      <div class="icon">🌫️</div>
+      <h2>โปรเจค PM2.5</h2>
+      <p>ตรวจวัดคุณภาพอากาศ<br>PM1.0 · PM2.5 · PM10<br>อุณหภูมิ · ความชื้น</p>
+    </div>
+    <div class="project-card" onclick="showPage('page-water')">
+      <div class="icon">💧</div>
+      <h2>โปรเจคน้ำกก</h2>
+      <p>ตรวจวัดคุณภาพน้ำ แม่น้ำกก<br>อุณหภูมิ · pH · TDS<br>ความขุ่น (Turbidity)</p>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     PM2.5 PAGE
+════════════════════════════════════════════ -->
+<div id="page-pm25" style="display:none">
+  <header>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-back" onclick="showPage('page-home')">← กลับ</button>
+      <div>
+        <h1>🌫️ <span>PM2.5</span> Dashboard</h1>
+        <div class="last-update" id="pm-last-update">กำลังโหลด...</div>
+      </div>
+    </div>
+    <button class="btn" onclick="fetchPM25()">⟳ รีเฟรช</button>
+  </header>
+
+  <div class="status-bar" id="pm-status"></div>
+
+  <div class="cards-grid">
+    <div class="card" id="card-pm25">
+      <div class="card-label">PM2.5</div>
+      <div class="card-value" id="v-pm25">—</div>
+      <div class="card-unit">µg/m³</div>
+    </div>
+    <div class="card">
+      <div class="card-label">PM1.0</div>
+      <div class="card-value" id="v-pm10x">—</div>
+      <div class="card-unit">µg/m³</div>
+    </div>
+    <div class="card">
+      <div class="card-label">PM10</div>
+      <div class="card-value" id="v-pm10">—</div>
+      <div class="card-unit">µg/m³</div>
+    </div>
+    <div class="card">
+      <div class="card-label">อุณหภูมิ</div>
+      <div class="card-value" id="v-temp">—</div>
+      <div class="card-unit">°C</div>
+    </div>
+    <div class="card">
+      <div class="card-label">ความชื้น</div>
+      <div class="card-value" id="v-hum">—</div>
+      <div class="card-unit">%RH</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h2>PM2.5 ย้อนหลัง 24 ชั่วโมง</h2>
+      <canvas id="chart-pm-history"></canvas>
+    </div>
+    <div class="chart-box">
+      <h2>พยากรณ์ PM2.5 ล่วงหน้า 24 ชั่วโมง</h2>
+      <canvas id="chart-pm-forecast"></canvas>
+    </div>
+  </div>
+
+  <div class="table-box">
+    <h2>ข้อมูลล่าสุด 20 รายการ</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>เวลา</th><th>PM2.5</th><th>PM1.0</th><th>PM10</th>
+          <th>อุณหภูมิ (°C)</th><th>ความชื้น (%)</th><th>ระดับ</th>
+        </tr>
+      </thead>
+      <tbody id="pm-table-body">
+        <tr><td colspan="7" style="text-align:center;color:var(--dim)">กำลังโหลด...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════
+     WATER QUALITY PAGE
+════════════════════════════════════════════ -->
+<div id="page-water" style="display:none">
+  <header>
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-back" onclick="showPage('page-home')">← กลับ</button>
+      <div>
+        <h1>💧 <span>น้ำกก</span> Dashboard</h1>
+        <div class="last-update" id="w-last-update">กำลังโหลด...</div>
+      </div>
+    </div>
+    <button class="btn" onclick="fetchWater()">⟳ รีเฟรช</button>
+  </header>
+
+  <div class="status-bar" id="w-status"></div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-label">อุณหภูมิ</div>
+      <div class="card-value" id="v-w-temp">—</div>
+      <div class="card-unit">°C</div>
+    </div>
+    <div class="card" id="card-ph">
+      <div class="card-label">pH</div>
+      <div class="card-value" id="v-w-ph">—</div>
+      <div class="card-unit">0 – 14</div>
+    </div>
+    <div class="card">
+      <div class="card-label">TDS</div>
+      <div class="card-value" id="v-w-tds">—</div>
+      <div class="card-unit">ppm</div>
+    </div>
+    <div class="card">
+      <div class="card-label">ความขุ่น</div>
+      <div class="card-value" id="v-w-tur">—</div>
+      <div class="card-unit">%</div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-box">
+      <h2>ค่า pH ย้อนหลัง 24 ชั่วโมง</h2>
+      <canvas id="chart-w-ph"></canvas>
+    </div>
+    <div class="chart-box">
+      <h2>TDS ย้อนหลัง 24 ชั่วโมง</h2>
+      <canvas id="chart-w-tds"></canvas>
+    </div>
+    <div class="chart-box">
+      <h2>พยากรณ์ pH ล่วงหน้า 24 ชั่วโมง</h2>
+      <canvas id="chart-w-ph-fore"></canvas>
+    </div>
+    <div class="chart-box">
+      <h2>พยากรณ์ TDS ล่วงหน้า 24 ชั่วโมง</h2>
+      <canvas id="chart-w-tds-fore"></canvas>
+    </div>
+  </div>
+
+  <div class="table-box">
+    <h2>ข้อมูลล่าสุด 20 รายการ</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>เวลา</th><th>อุณหภูมิ (°C)</th><th>pH</th>
+          <th>TDS (ppm)</th><th>ความขุ่น (%)</th><th>คุณภาพน้ำ</th>
+        </tr>
+      </thead>
+      <tbody id="w-table-body">
+        <tr><td colspan="6" style="text-align:center;color:var(--dim)">กำลังโหลด...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// ⚙️  CONFIG
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbzZv3iNEAQfzvQq9QknHinu3N0cQVQQnw9GrXcA7HZ__cducaBnvC6o7fx7-Mlw3w/exec';
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+const PAGES = ['page-home', 'page-pm25', 'page-water'];
+
+function showPage(id) {
+  PAGES.forEach(p => document.getElementById(p).style.display = p === id ? '' : 'none');
+  if (id === 'page-pm25')  { initPM25Charts();  fetchPM25(); }
+  if (id === 'page-water') { initWaterCharts(); fetchWater(); }
+}
+
+// ============================================================
+// SHARED HELPERS
+// ============================================================
+async function fetchAPI(baseUrl, action, type) {
+  const params = [];
+  if (action) params.push(`action=${action}`);
+  if (type)   params.push(`type=${type}`);
+  const url  = baseUrl + (params.length ? '?' + params.join('&') : '');
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const json = await resp.json();
+  if (json.status !== 'success') throw new Error('API error');
+  return json.data ?? [];
+}
+
+function fmtTime(ts) {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
+}
+
+function makeChartCfg(labels, data, color, dashed, label) {
+  return {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label,
+        data,
+        borderColor: color,
+        backgroundColor: color + '22',
+        borderWidth: 2,
+        borderDash: dashed ? [6, 4] : [],
+        pointRadius: 2,
+        fill: true,
+        tension: 0.3,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#8899aa', maxTicksLimit: 8, maxRotation: 0 }, grid: { color: '#1a2a4a' } },
+        y: { ticks: { color: '#8899aa' }, grid: { color: '#1a2a4a' } }
+      }
+    }
+  };
+}
+
+function updateChart(chart, labels, data) {
+  chart.data.labels = labels;
+  chart.data.datasets[0].data = data;
+  chart.update();
+}
+
+// ============================================================
+// PM2.5 — LOGIC
+// ============================================================
+function pm25Level(v) {
+  if (v <= 25) return { color: '#4CAF50', label: 'ดี' };
+  if (v <= 37) return { color: '#FFC107', label: 'ปานกลาง' };
+  if (v <= 50) return { color: '#FF9800', label: 'เริ่มมีผล' };
+  if (v <= 90) return { color: '#F44336', label: 'มีผลต่อสุขภาพ' };
+  return           { color: '#9C27B0', label: 'อันตราย' };
+}
+
+function normalizePM(r) {
+  // positional fallback ตามลำดับที่ savePM เขียน: [timestamp, pm1, pm25, pm10, temp, hum]
+  const v = Object.values(r);
+  return {
+    Timestamp:   r['Timestamp']   ?? r['timestamp']  ?? r['Time']        ?? r['time']
+               ?? r['DateTime']   ?? r['date']        ?? r['Date']        ?? v[0] ?? null,
+    'PM2.5':     r['PM2.5']       ?? r['pm25']        ?? r['PM25']        ?? v[2] ?? 0,
+    'PM1.0':     r['PM1.0']       ?? r['pm1']         ?? r['PM1']         ?? v[1] ?? 0,
+    'PM10':      r['PM10']        ?? r['pm10']        ?? r['PM10']        ?? v[3] ?? 0,
+    Temperature: r['Temperature'] ?? r['temp']        ?? r['Temp']        ?? v[4] ?? 0,
+    Humidity:    r['Humidity']    ?? r['hum']         ?? r['humidity']    ?? v[5] ?? 0,
+  };
+}
+
+let histChart, foreChart, pmChartsInited = false;
+
+function initPM25Charts() {
+  if (pmChartsInited) return;
+  histChart = new Chart(document.getElementById('chart-pm-history'),  makeChartCfg([], [], '#4fc3f7', false, 'PM2.5 (µg/m³)'));
+  foreChart = new Chart(document.getElementById('chart-pm-forecast'), makeChartCfg([], [], '#ff8a65', true,  'PM2.5 (µg/m³)'));
+  pmChartsInited = true;
+}
+
+async function fetchPM25() {
+  const s = id => document.getElementById(id);
+  s('pm-status').textContent = 'กำลังดึงข้อมูล...';
+  try {
+    const [dataRows, foreRows] = await Promise.all([
+      fetchAPI(API_URL, 'data', 'pm'),
+      fetchAPI(API_URL, 'forecast', 'pm').catch(() => []),
+    ]);
+
+    // cards
+    if (dataRows.length) {
+      const last = normalizePM(dataRows[dataRows.length - 1]);
+      const pm25 = +last['PM2.5'];
+      const lvl  = pm25Level(pm25);
+      s('v-pm25').textContent  = pm25.toFixed(1);
+      s('v-pm10x').textContent = (+last['PM1.0']).toFixed(1);
+      s('v-pm10').textContent  = (+last['PM10']).toFixed(1);
+      s('v-temp').textContent  = (+last['Temperature']).toFixed(1);
+      s('v-hum').textContent   = (+last['Humidity']).toFixed(1);
+      s('card-pm25').style.borderColor  = lvl.color;
+      s('v-pm25').style.color = lvl.color;
+      const ts = last['Timestamp'];
+      s('pm-last-update').textContent = 'อัปเดตล่าสุด: ' + (ts ? new Date(ts).toLocaleString('th-TH') : '—');
+    }
+
+    // charts
+    const norm = dataRows.map(normalizePM);
+    updateChart(histChart, norm.map(r => fmtTime(r['Timestamp'])), norm.map(r => +r['PM2.5']));
+    if (foreRows.length) {
+      const labels = foreRows.map(r => fmtTime(r['Timestamp'] ?? r['ds'] ?? Object.values(r)[0]));
+      const data   = foreRows.map(r => +(r['PM2.5'] ?? r['yhat'] ?? r['Forecast'] ?? 0));
+      updateChart(foreChart, labels, data);
+    }
+
+    // table
+    const last20 = dataRows.slice(-20).reverse().map(normalizePM);
+    s('pm-table-body').innerHTML = last20.map(r => {
+      const pm25 = +r['PM2.5'];
+      const lvl  = pm25Level(pm25);
+      const ts   = r['Timestamp'] ? new Date(r['Timestamp']).toLocaleString('th-TH') : '—';
+      return `<tr>
+        <td>${ts}</td>
+        <td style="color:${lvl.color};font-weight:600">${pm25.toFixed(1)}</td>
+        <td>${(+r['PM1.0']).toFixed(1)}</td>
+        <td>${(+r['PM10']).toFixed(1)}</td>
+        <td>${(+r['Temperature']).toFixed(1)}</td>
+        <td>${(+r['Humidity']).toFixed(1)}</td>
+        <td><span class="badge" style="background:${lvl.color}">${lvl.label}</span></td>
+      </tr>`;
+    }).join('');
+
+    s('pm-status').textContent = '';
+  } catch (err) {
+    s('pm-status').textContent = '⚠️ ดึงข้อมูลไม่สำเร็จ: ' + err.message;
+  }
+}
+
+// ============================================================
+// WATER QUALITY — LOGIC
+// ============================================================
+function phLevel(ph) {
+  if (ph < 6.0)              return { color: '#ef5350', label: 'กรด' };
+  if (ph < 6.5)              return { color: '#FF9800', label: 'กรดเล็กน้อย' };
+  if (ph <= 8.5)             return { color: '#4CAF50', label: 'ปกติ' };
+  if (ph <= 9.0)             return { color: '#42a5f5', label: 'ด่างเล็กน้อย' };
+  return                            { color: '#ef5350', label: 'ด่าง' };
+}
+
+function tdsLevel(tds) {
+  if (tds < 300)  return { color: '#4CAF50', label: 'ดีเยี่ยม' };
+  if (tds < 600)  return { color: '#FFC107', label: 'ดี' };
+  if (tds < 900)  return { color: '#FF9800', label: 'ปานกลาง' };
+  return                  { color: '#F44336', label: 'แย่' };
+}
+
+function normalizeWater(r) {
+  // positional fallback ตามลำดับที่ saveWater เขียน: [timestamp, temp, ph, tds, turbidity]
+  const v = Object.values(r);
+  return {
+    Timestamp:   r['Timestamp']   ?? r['timestamp']  ?? r['Time']     ?? r['time']
+               ?? r['DateTime']   ?? r['date']        ?? r['Date']     ?? v[0] ?? null,
+    Temperature: r['Temperature'] ?? r['temp']        ?? r['Temp']     ?? v[1] ?? 0,
+    pH:          r['pH']          ?? r['ph']          ?? r['PH']       ?? v[2] ?? 0,
+    TDS:         r['TDS']         ?? r['tds']         ?? v[3] ?? 0,
+    Turbidity:   r['Turbidity']   ?? r['turbidity']   ?? r['Turb']     ?? v[4] ?? 0,
+  };
+}
+
+let phChart, tdsChartW, phForeChart, tdsForeChart, waterChartsInited = false;
+
+function initWaterCharts() {
+  if (waterChartsInited) return;
+  phChart     = new Chart(document.getElementById('chart-w-ph'),       makeChartCfg([], [], '#66bb6a', false, 'pH'));
+  tdsChartW   = new Chart(document.getElementById('chart-w-tds'),      makeChartCfg([], [], '#ffa726', false, 'TDS (ppm)'));
+  phForeChart = new Chart(document.getElementById('chart-w-ph-fore'),  makeChartCfg([], [], '#80cbc4', true,  'pH (พยากรณ์)'));
+  tdsForeChart= new Chart(document.getElementById('chart-w-tds-fore'), makeChartCfg([], [], '#ffb74d', true,  'TDS (พยากรณ์)'));
+  waterChartsInited = true;
+}
+
+async function fetchWater() {
+  const s = id => document.getElementById(id);
+  s('w-status').textContent = 'กำลังดึงข้อมูล...';
+  try {
+    const [dataRows, foreRows] = await Promise.all([
+      fetchAPI(API_URL, 'data', 'water'),
+      fetchAPI(API_URL, 'forecast', 'water').catch(() => []),
+    ]);
+
+    // cards
+    if (dataRows.length) {
+      const last = normalizeWater(dataRows[dataRows.length - 1]);
+      const ph   = +last['pH'];
+      const lvl  = phLevel(ph);
+      s('v-w-temp').textContent = (+last['Temperature']).toFixed(1);
+      s('v-w-ph').textContent   = ph.toFixed(2);
+      s('v-w-tds').textContent  = (+last['TDS']).toFixed(0);
+      s('v-w-tur').textContent  = (+last['Turbidity']).toFixed(1);
+      s('card-ph').style.borderColor = lvl.color;
+      s('v-w-ph').style.color = lvl.color;
+      const ts = last['Timestamp'];
+      s('w-last-update').textContent = 'อัปเดตล่าสุด: ' + (ts ? new Date(ts).toLocaleString('th-TH') : '—');
+    }
+
+    // history charts
+    const norm = dataRows.map(normalizeWater);
+    const labels = norm.map(r => fmtTime(r['Timestamp']));
+    updateChart(phChart,   labels, norm.map(r => +r['pH']));
+    updateChart(tdsChartW, labels, norm.map(r => +r['TDS']));
+
+    // forecast charts
+    if (foreRows.length) {
+      const fnorm  = foreRows.map(normalizeWater);
+      const flabels = fnorm.map(r => fmtTime(r['Timestamp']));
+      updateChart(phForeChart,  flabels, fnorm.map(r => +r['pH']));
+      updateChart(tdsForeChart, flabels, fnorm.map(r => +r['TDS']));
+    }
+
+    // table
+    const last20 = dataRows.slice(-20).reverse().map(normalizeWater);
+    s('w-table-body').innerHTML = last20.map(r => {
+      const ph  = +r['pH'];
+      const lvl = phLevel(ph);
+      const ts  = r['Timestamp'] ? new Date(r['Timestamp']).toLocaleString('th-TH') : '—';
+      return `<tr>
+        <td>${ts}</td>
+        <td>${(+r['Temperature']).toFixed(1)}</td>
+        <td style="color:${lvl.color};font-weight:600">${ph.toFixed(2)}</td>
+        <td>${(+r['TDS']).toFixed(0)}</td>
+        <td>${(+r['Turbidity']).toFixed(1)}</td>
+        <td><span class="badge" style="background:${lvl.color}">${lvl.label}</span></td>
+      </tr>`;
+    }).join('');
+
+    s('w-status').textContent = '';
+  } catch (err) {
+    s('w-status').textContent = '⚠️ ดึงข้อมูลไม่สำเร็จ: ' + err.message;
+  }
+}
+
+// Auto-refresh ทุก 5 นาที เฉพาะหน้าที่กำลังแสดงอยู่
+setInterval(() => {
+  if (document.getElementById('page-pm25').style.display  !== 'none') fetchPM25();
+  if (document.getElementById('page-water').style.display !== 'none') fetchWater();
+}, 5 * 60 * 1000);
+</script>
+</body>
+</html>
