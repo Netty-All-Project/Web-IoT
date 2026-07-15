@@ -60,7 +60,7 @@ def read_sheet(gc, sheet_name, timestamp_col='Timestamp'):
     ws   = gc.open_by_key(SHEET_ID).worksheet(sheet_name)
     data = ws.get_all_records()
     df   = pd.DataFrame(data)
-    df[timestamp_col] = pd.to_datetime(df[timestamp_col])
+    df[timestamp_col] = pd.to_datetime(df[timestamp_col], dayfirst=True)
     return df
 
 
