@@ -36,7 +36,14 @@ FORECAST_HOURS = 24
 
 def connect_sheets():
     """เชื่อมต่อ Google Sheets รองรับทั้ง env var (Docker) และ credentials.json (local)"""
+    import base64
+    # รองรับ base64 encoded (แก้ปัญหา JSON quote บิดเบี้ยวใน Dokploy)
+    creds_b64 = os.environ.get('GOOGLE_CREDENTIALS_JSON_B64')
     creds_json = os.environ.get('GOOGLE_CREDENTIALS_JSON')
+
+    if creds_b64:
+        creds_json = base64.b64decode(creds_b64).decode('utf-8')
+
     if creds_json:
         tmp = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
         tmp.write(creds_json)
