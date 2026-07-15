@@ -1,12 +1,14 @@
 #!/bin/bash
 set -e
 
-# เขียน credentials.json จาก env var ตอน container start
+# ลองเขียน credentials จาก env var ก่อน (ถ้ามี)
 if [ -n "$GOOGLE_CREDENTIALS_JSON_B64" ]; then
     echo "$GOOGLE_CREDENTIALS_JSON_B64" | base64 -d > /app/credentials.json
-    echo "✅ credentials.json พร้อมแล้ว"
+    echo "✅ credentials จาก env var"
+elif [ -f "/app/credentials.json" ]; then
+    echo "✅ credentials จาก mount"
 else
-    echo "❌ ไม่พบ GOOGLE_CREDENTIALS_JSON_B64"
+    echo "❌ ไม่พบ credentials"
     exit 1
 fi
 
