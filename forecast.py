@@ -67,6 +67,9 @@ def read_sheet(gc, sheet_name, timestamp_col='Timestamp'):
     # ลบ column ที่ header ว่าง
     df = df.loc[:, df.columns != '']
     df[timestamp_col] = pd.to_datetime(df[timestamp_col], format='mixed', dayfirst=False)
+    for col in df.columns:
+        if col != timestamp_col:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
     return df
 
 

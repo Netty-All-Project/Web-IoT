@@ -9,16 +9,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# รับ build-time var แล้วฝังเป็น runtime env ไว้ใน image
-ARG GOOGLE_CREDENTIALS_JSON_B64
-ENV GOOGLE_CREDENTIALS_JSON_B64=${GOOGLE_CREDENTIALS_JSON_B64}
-
 COPY forecast.py entrypoint.sh ./
 RUN chmod +x entrypoint.sh
 
-# รัน forecast ทุก 6 ชั่วโมง
-RUN echo "0 */6 * * * cd /app && python forecast.py >> /var/log/forecast.log 2>&1" > /etc/cron.d/forecast && \
-    chmod 0644 /etc/cron.d/forecast && \
-    crontab /etc/cron.d/forecast
+# สร้าง log file
+RUN touch /var/log/forecast.log
 
 CMD ["/app/entrypoint.sh"]
