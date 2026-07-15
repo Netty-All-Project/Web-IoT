@@ -58,8 +58,14 @@ def connect_sheets():
 def read_sheet(gc, sheet_name, timestamp_col='Timestamp'):
     """อ่านข้อมูลจาก Sheet → DataFrame"""
     ws   = gc.open_by_key(SHEET_ID).worksheet(sheet_name)
-    data = ws.get_all_records()
-    df   = pd.DataFrame(data)
+    rows = ws.get_all_values()
+    if len(rows) < 2:
+        return pd.DataFrame()
+    headers = rows[0]
+    data = rows[1:]
+    df = pd.DataFrame(data, columns=headers)
+    # ลบ column ที่ header ว่าง
+    df = df.loc[:, df.columns != '']
     df[timestamp_col] = pd.to_datetime(df[timestamp_col], format='mixed', dayfirst=False)
     return df
 
